@@ -64,7 +64,7 @@ extension BluetoothSerialDelegate {
 }
 
 
-public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+public final class BluetoothSerial: NSObject {
 
 //MARK: Variables
 
@@ -173,15 +173,18 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         connectedPeripheral!.writeValue(data, for: writeCharacteristic!, type: writeType)
     }
 
+}
+
+extension BluetoothSerial: CBCentralManagerDelegate, CBPeripheralDelegate {
 
 //MARK: CBCentralManagerDelegate functions
 
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         // just send it to the delegate
         delegate.serialDidDiscoverPeripheral(peripheral, RSSI: RSSI)
     }
 
-    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+    public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         // set some stuff right
         peripheral.delegate = self
         pendingPeripheral = nil
@@ -199,7 +202,7 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         peripheral.discoverServices([CBUUID(string: "FFE0")])
     }
 
-    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+    public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         connectedPeripheral = nil
         pendingPeripheral = nil
 
@@ -207,14 +210,14 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         delegate.serialDidDisconnect(peripheral, error: error as NSError?)
     }
 
-    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+    public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         pendingPeripheral = nil
 
         // just send it to the delegate
         delegate.serialDidFailToConnect(peripheral, error: error as NSError?)
     }
 
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         // note that "didDisconnectPeripheral" won't be called if BLE is turned off while connected
         connectedPeripheral = nil
         pendingPeripheral = nil
@@ -223,17 +226,16 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         delegate.serialDidChangeState()
     }
 
-
 //MARK: CBPeripheralDelegate functions
 
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         // discover the 0xFFE1 characteristic for all services (though there should only be one)
         for service in peripheral.services! {
             peripheral.discoverCharacteristics([CBUUID(string: "FFE1")], for: service)
         }
     }
 
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         // check whether the characteristic we're looking for (0xFFE1) is present - just to be sure
         for characteristic in service.characteristics! {
             if characteristic.uuid == CBUUID(string: "FFE1") {
@@ -249,7 +251,7 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         }
     }
 
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         // notify the delegate in different ways
         // if you don't use one of these, just comment it (for optimum efficiency :])
         let data = characteristic.value
@@ -271,7 +273,7 @@ public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeriph
         delegate.serialDidReceiveBytes(bytes)
     }
 
-    func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
         delegate.serialDidReadRSSI(RSSI)
     }
 }
