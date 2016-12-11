@@ -15,7 +15,7 @@ import CoreBluetooth
 var serial: BluetoothSerial!
 
 // Delegate functions
-protocol BluetoothSerialDelegate {
+public protocol BluetoothSerialDelegate {
     // ** Required **
 
     /// Called when de state of the CBCentralManager changes (e.g. when bluetooth is turned on/off)
@@ -64,27 +64,27 @@ extension BluetoothSerialDelegate {
 }
 
 
-final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+public final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
 
 //MARK: Variables
 
     /// The delegate object the BluetoothDelegate methods will be called upon
-    var delegate: BluetoothSerialDelegate!
+    public var delegate: BluetoothSerialDelegate!
 
     /// The CBCentralManager this bluetooth serial handler uses for... well, everything really
     var centralManager: CBCentralManager!
 
     /// The peripheral we're trying to connect to (nil if none)
-    var pendingPeripheral: CBPeripheral?
+    public var pendingPeripheral: CBPeripheral?
 
     /// The connected peripheral (nil if none is connected)
-    var connectedPeripheral: CBPeripheral?
+    public var connectedPeripheral: CBPeripheral?
 
     /// The characteristic 0xFFE1 we need to write to, of the connectedPeripheral
     weak var writeCharacteristic: CBCharacteristic?
 
     /// Whether this serial is ready to send and receive data
-    var isReady: Bool {
+    public var isReady: Bool {
         get {
             return centralManager.state == .poweredOn &&
                    connectedPeripheral != nil &&
@@ -95,20 +95,20 @@ final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDel
     /// Whether to write to the HM10 with or without response.
     /// Legit HM10 modules (from JNHuaMao) require 'Write without Response',
     /// while fake modules (e.g. from Bolutek) require 'Write with Response'.
-    var writeType: CBCharacteristicWriteType = .withoutResponse
+    public var writeType: CBCharacteristicWriteType = .withoutResponse
 
 
 //MARK: functions
 
     /// Always use this to initialize an instance
-    init(delegate: BluetoothSerialDelegate) {
+    public init(delegate: BluetoothSerialDelegate) {
         super.init()
         self.delegate = delegate
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
 
     /// Start scanning for peripherals
-    func startScan() {
+    public func startScan() {
         guard centralManager.state == .poweredOn else { return }
 
         // start scanning for peripherals with correct service UUID
@@ -124,18 +124,18 @@ final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDel
     }
 
     /// Stop scanning for peripherals
-    func stopScan() {
+    public func stopScan() {
         centralManager.stopScan()
     }
 
     /// Try to connect to the given peripheral
-    func connectToPeripheral(_ peripheral: CBPeripheral) {
+    public func connectToPeripheral(_ peripheral: CBPeripheral) {
         pendingPeripheral = peripheral
         centralManager.connect(peripheral, options: nil)
     }
 
     /// Disconnect from the connected peripheral or stop connecting to it
-    func disconnect() {
+    public func disconnect() {
         if let p = connectedPeripheral {
             centralManager.cancelPeripheralConnection(p)
         } else if let p = pendingPeripheral {
@@ -144,13 +144,13 @@ final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDel
     }
 
     /// The didReadRSSI delegate function will be called after calling this function
-    func readRSSI() {
+    public func readRSSI() {
         guard isReady else { return }
         connectedPeripheral!.readRSSI()
     }
 
     /// Send a string to the device
-    func sendMessageToDevice(_ message: String) {
+    public func sendMessageToDevice(_ message: String) {
         guard isReady else { return }
 
         if let data = message.data(using: String.Encoding.utf8) {
@@ -159,7 +159,7 @@ final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDel
     }
 
     /// Send an array of bytes to the device
-    func sendBytesToDevice(_ bytes: [UInt8]) {
+    public func sendBytesToDevice(_ bytes: [UInt8]) {
         guard isReady else { return }
 
         let data = Data(bytes: UnsafePointer<UInt8>(bytes), count: bytes.count)
@@ -167,7 +167,7 @@ final class BluetoothSerial: NSObject, CBCentralManagerDelegate, CBPeripheralDel
     }
 
     /// Send data to the device
-    func sendDataToDevice(_ data: Data) {
+    public func sendDataToDevice(_ data: Data) {
         guard isReady else { return }
 
         connectedPeripheral!.writeValue(data, for: writeCharacteristic!, type: writeType)
