@@ -52,7 +52,7 @@ public protocol BluetoothSerialDelegate {
 }
 
 // Make some of the delegate functions optional
-extension BluetoothSerialDelegate {
+public extension BluetoothSerialDelegate {
     func serialDidReceiveString(_ message: String) {}
     func serialDidReceiveBytes(_ bytes: [UInt8]) {}
     func serialDidReceiveData(_ data: Data) {}
